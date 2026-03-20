@@ -1,50 +1,45 @@
-# 간단한 전이학습 프로젝트
+<div align="center">
 
-이 프로젝트는 MBTI 성격 유형 데이터셋을 사용하여 간단한 텍스트 분류 전이학습을 수행합니다.
+# 🎯 MBTI 다국어 번역 및 텍스트 분류 전이학습
+### 🧠 Hugging Face NLLB-200을 활용한 교차 언어(Cross-lingual) 파인튜닝
 
-## 데이터
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Hugging Face](https://img.shields.io/badge/Hugging%20Face-FFD21E.svg?style=for-the-badge&logo=Hugging-Face&logoColor=black)
+![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white)
 
-- 데이터 출처: [MBTI 성격 유형 데이터셋 (Kaggle)](https://www.kaggle.com/datasets/datasnaek/mbti-type)
-- 원본 데이터는 영어로 되어 있으며, 각 행은 사용자의 MBTI 유형과 해당 사용자가 작성한 여러 개의 게시물("posts" 컬럼)을 포함합니다.
+</div>
 
-## 모델
+## 📌 프로젝트 소개
+본 프로젝트는 인터넷 게시물 데이터를 기반으로 작성자의 **MBTI 성격 유형을 예측하는 텍스트 분류 전이학습(Transfer Learning)** 파이프라인입니다. 
 
-- 전이학습에 사용된 모델: [facebook/nllb-200-distilled-600M (Hugging Face)](https://huggingface.co/facebook/nllb-200-distilled-600M)
-- 이 모델은 다양한 언어 쌍에 대한 번역 작업을 위해 사전 학습되었습니다.
+특히 영문으로만 이루어진 대규모 원본 데이터셋을 한국어 화자 환경에 맞추기 위해, Meta(Facebook)의 고성능 신경망 기계번역 모델인 `NLLB-200`을 도입하여 데이터를 한국어로 일괄 번역한 뒤 학습을 수행하는 창의적인 다국어 처리 접근법을 보여줍니다.
 
-## 프로젝트 목표
+## 📊 데이터셋 및 모델 구성
+- **빅데이터 출처**: [MBTI 성격 유형 데이터셋 (Kaggle)](https://www.kaggle.com/datasets/datasnaek/mbti-type) (MBTI 타입 및 유저별 다중 텍스트 포함)
+- **기계 번역 모델 (Teacher Model)**: [`facebook/nllb-200-distilled-600M`](https://huggingface.co/facebook/nllb-200-distilled-600M) - No Language Left Behind 오픈소스 모델 활용.
 
-1. 영어로 된 MBTI 게시물 데이터를 한국어로 번역합니다.
-2. 번역된 데이터를 사용하여 MBTI 성격 유형을 분류하는 모델을 전이학습합니다.
-3. 전이학습된 모델의 성능을 평가하고 추론 결과를 확인합니다.
+## ✨ 핵심 파이프라인 단계
+1. **데이터 스크래빙 및 탐색(EDA)**: MBTI 데이터셋을 적재하고 불균형 분포 및 텍스트 노이즈 구조를 시각적으로 확인합니다.
+2. **텍스트 정규화 및 전처리 (Preprocessing)**: 무의미한 URL 파라미터, 이미지 확장자 토큰 등을 정규표현식(`re`)으로 제거하고 문장 단위로 필터링합니다. 
+3. **NLLB 기반 대규모 기계번역 (Translation)**: 전처리된 영어 문장을 NLLB-200 모델을 호출하여 고품질의 한국어로 변환합니다. (언어 장벽 극복)
+4. **Hugging Face 토크나이징 (Tokenization)**: 사전 학습된 언어 모델의 텍스트 분류(Classification) 토크나이저를 통해 한국어 문장을 텐서로 양자화합니다.
+5. **전이학습 (Transfer Learning) 훈련**: 변환된 한국어 데이터 위에서 MBTI 라벨의 손실 함수를 줄여나가는 방향으로 언어 모델 가중치를 파인튜닝(Fine-tuning)합니다.
+6. **추론 및 성능 평가 (Inference)**: 새로운 입력 한국어 문장에 대해 훈련된 모델이 MBTI를 확률적으로 추론하고 결과를 반환합니다.
 
-## 주요 단계
+## 🛠️ 기술 스택
+* `transformers` (Hugging Face)
+* `pandas`, `numpy`
+* `re` (Regular Expressions)
+* `tqdm` (진행 상태 시각화)
 
-1. **데이터 로드 및 탐색**: MBTI 데이터셋을 로드하고 데이터의 구조 및 내용을 확인합니다.
-2. **데이터 전처리**: 게시물 텍스트에서 URL, 이미지 확장자 등을 제거하고 문장 단위로 분리합니다. 또한, 영어 비중이 높은 문장만 필터링하고 샘플링합니다.
-3. **데이터 번역**: NLLB-200 모델을 사용하여 전처리된 영어 문장을 한국어로 번역합니다.
-4. **데이터 분할**: 번역된 데이터를 훈련 세트와 테스트 세트로 분할합니다.
-5. **모델 및 토크나이저 로드**: 텍스트 분류를 위한 사전 학습된 모델과 해당 토크나이저를 로드합니다.
-6. **데이터셋 전처리 (모델 입력 형식)**: 토크나이저를 사용하여 훈련 및 테스트 데이터를 모델 입력 형식에 맞게 변환합니다.
-7. **모델 훈련**: 전처리된 데이터로 모델을 전이학습합니다.
-8. **모델 평가**: 테스트 세트로 모델의 성능을 평가합니다.
-9. **추론**: 훈련된 모델을 사용하여 새로운 텍스트의 MBTI 유형을 추론합니다.
+## 🚀 시작하기
 
-## 사용 라이브러리
+이 프로젝트는 **Google Colab (GPU 권장)** 환경에서 실행되도록 최적화되어 있습니다.
+1. 환경에 필수 라이브러리를 설치합니다.
+   ```bash
+   pip install transformers datasets pandas numpy
+   ```
+2. 프로젝트 노트북 파일을 열고 셀을 순서대로 실행하여 번역 파이프라인 및 분류 모델 학습이 완료되는 과정을 모니터링하세요.
 
-- pandas
-- numpy
-- re
-- random
-- transformers
-- tqdm
-
-## 실행 방법
-
-1. Google Colab에서 이 노트북을 엽니다.
-2. 필요한 라이브러리를 설치합니다. (transformers, datasets 등)
-3. 데이터를 로드하고 전처리합니다.
-4. 번역 모델을 사용하여 데이터를 번역합니다.
-5. 텍스트 분류 모델을 로드하고 데이터를 전처리합니다.
-6. 모델을 훈련하고 평가합니다.
-7. 추론 코드를 실행하여 결과를 확인합니다.
+---
+*본 프로젝트는 대규모 언어 모델(LLM) 생태계, 다국어 자연어 처리(NLP), 전이학습 방법론에 대한 끊임없는 탐구의 일환으로 [우진(Woojin Choi)](https://github.com/CHUH00)에 의해 개발되었습니다.*
